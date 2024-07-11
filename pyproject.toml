@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "bnbPrices"
+authors = ["Dist Bit <adp01@pm.me>"]
+version = "0.1.0"
+description = ""
+license = "UNLICENCE"
+readme = "README.md"
+packages = [
+    { include = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+python-dotenv = "^1.0.1"
+loguru = "^0.7.2"
+PySnooper = "^1.2.0"
+requests = "^2.32.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

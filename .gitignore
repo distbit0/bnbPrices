@@ -1,0 +1,92 @@
+# Python compiled files
+**pycache**/
+*.py[cod]
+*.pyc
+
+# Python packaging files
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+parts/
+sdist/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+MANIFEST
+
+# Log files
+*.log
+
+# Environment files
+.env
+venv/
+.venv/
+env/
+profile-venv/
+
+# IDE and editor files
+.idea/
+.spyderproject
+.spyproject
+.ropeproject
+*.sage.py
+.scrapy
+
+# Cache and temporary files
+*~
+.cache
+.DS_Store
+.eggs/
+.coverage
+nohup.out
+.coverage.*
+.hypothesis/
+.installed.cfg
+.mypy_cache/
+.nox/
+.pytest_cache/
+.pyre/
+.tox/
+cython_debug/
+develop-eggs/
+downloads/
+htmlcov/
+instance/
+nosetests.xml
+pip-delete-this-directory.txt
+pip-log.txt
+target/
+var/
+tmp/
+*.lock
+
+# Compiled files
+*.jar
+*.war
+*.ear
+*.class
+*.mo
+*.so
+*.spec
+*.zip
+*.tgz
+
+# Documentation files
+docs/_build/
+
+# Miscellaneous files
+.classpath
+.dmypy.json
+lib/
+lib64/
+profile_default/
+.Python
+.pytype/
+
+
+# output and storage
+output/
+data/
+.aider*
