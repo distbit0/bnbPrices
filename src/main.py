@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load configuration
-with open("config.json", "r") as config_file:
+currentDir = os.path.dirname(__file__)
+jsonFile = os.path.join(currentDir, "../config.json")
+with open(jsonFile, "r") as config_file:
     config = json.load(config_file)
 
 

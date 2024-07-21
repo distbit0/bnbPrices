@@ -3,7 +3,6 @@ Canggu, Bali, Indonesia
 Sanur, Bali, Indonesia
 Chiang Mai, Thailand
 Istanbul, Turkey
-Siggiewi, Malta
 Tbilisi, Georgia
 Belgrade, Serbia
 Bucharest, Romania
