@@ -7,12 +7,9 @@ Hvar, Croatia
 Split, Croatia
 Portimao, Portugal
 Porto, Portugal
-Porto, Portugal
-Durrës, Albania
 Vlorë, Albania
 Constanta, Romania
 Valencia, Spain
-Alicante, Spain
 Málaga, Spain
 Bari, Italy
 Varna, Bulgaria
@@ -25,3 +22,9 @@ Volos, Greece
 Kos, Greece
 Ermoupoli, Greece
 Corfu, Greece
+Naxos, Greece
+Milos, Greece
+Ikaria, Greece
+Samos, Greece
+Lemnos, Greece
+Valletta, Malta

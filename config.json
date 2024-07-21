@@ -1,1 +1,10 @@
-{}
+{
+    "bedrooms": 2,
+    "adults": 2,
+    "max_price_per_night": 250,
+    "nth_cheapest": 100,
+    "days_from_now": 21,
+    "stay_duration": 7,
+    "bottom_nth_percentile": 20,
+    "print_histograms": false
+}

@@ -5,10 +5,15 @@ import requests
 from datetime import datetime, timedelta
 from datetime import datetime
 import os
+import json
 from dotenv import load_dotenv
 
 
 load_dotenv()
+
+# Load configuration
+with open("config.json", "r") as config_file:
+    config = json.load(config_file)
 
 
 def get_price_data(city, bedrooms, start_date, end_date, adults):
@@ -140,12 +145,6 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
                             "true",
                         ],
                     },
-                    # {
-                    #     "filterName": "zoom",
-                    #     "filterValues": [
-                    #         "15.478",
-                    #     ],
-                    # },
                 ],
                 "requestedPageType": "STAYS_SEARCH",
             },
@@ -179,26 +178,20 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
     return price_histogram, min_value, max_value
 
 
-def calculate_weighted_average_price(price_histogram, min_value, max_value):
-    num_price_points = len(price_histogram)
-    price_step = (max_value - min_value) / (num_price_points - 1)
-    price_points = [min_value + i * price_step for i in range(num_price_points)]
-    total_price = sum(
-        price * count for price, count in zip(price_points, price_histogram)
-    )
-    total_count = sum(price_histogram)
-    weighted_average_price = total_price / total_count
-    return weighted_average_price
-
-
-def get_city_price_stats(cities, bedrooms, start_date, end_date, adults):
+def get_city_price_stats(
+    cities,
+    bedrooms,
+    start_date,
+    end_date,
+    adults,
+    max_price_per_night,
+    nth_cheapest,
+    bottom_nth_percentile,
+):
     city_stats = {}
     for city in cities:
         price_histogram, min_value, max_value = get_price_data(
             city, bedrooms, start_date, end_date, adults
-        )
-        weighted_average_price = calculate_weighted_average_price(
-            price_histogram, min_value, max_value
         )
         num_price_points = len(price_histogram)
         price_step = (max_value - min_value) / (num_price_points - 1)
@@ -206,74 +199,105 @@ def get_city_price_stats(cities, bedrooms, start_date, end_date, adults):
         total_count = sum(price_histogram)
         cumulative_count = 0
         median_price = None
-        bottom_30_percentile = None
-        top_30_percentile = None
-        bottom_n = None
+        bottom_nth_percentile_price = None
+        nth_cheapest_price = None
+        filtered_count = 0
         for price, count in zip(price_points, price_histogram):
             cumulative_count += count
+            if price <= max_price_per_night:
+                filtered_count += count
             if median_price is None and cumulative_count >= total_count / 2:
                 median_price = price
-            if bottom_n is None and (cumulative_count >= min(100, total_count)):
-                bottom_n = price
-            if bottom_30_percentile is None and cumulative_count >= total_count * 0.3:
-                bottom_30_percentile = price
-            if top_30_percentile is None and cumulative_count >= total_count * 0.7:
-                top_30_percentile = price
+            if nth_cheapest_price is None and (
+                cumulative_count >= min(nth_cheapest, total_count)
+            ):
+                nth_cheapest_price = price
+            if (
+                bottom_nth_percentile_price is None
+                and cumulative_count >= total_count * (bottom_nth_percentile / 100)
+            ):
+                bottom_nth_percentile_price = price
         city_stats[city] = {
-            "mean_price": weighted_average_price,
             "median_price": median_price,
-            "bottom_n": bottom_n,
-            "bottom_30_percentile": bottom_30_percentile,
-            "top_30_percentile": top_30_percentile,
+            "nth_cheapest_price": nth_cheapest_price,
+            "bottom_nth_percentile_price": bottom_nth_percentile_price,
             "price_histogram": price_histogram,
             "min_value": min_value,
             "max_value": max_value,
+            "units": filtered_count,
         }
     return city_stats
 
 
-def print_price_histogram(city, price_histogram, min_value, max_value, mean_price):
+def print_price_histogram(city, price_histogram, min_value, max_value, median_price):
+    if not config["print_histograms"]:
+        return
     num_price_points = len(price_histogram)
     price_step = (max_value - min_value) / (num_price_points - 1)
     price_points = [min_value + i * price_step for i in range(num_price_points)]
-    mean_index = int((mean_price - min_value) / price_step)
-    start_index = max(0, mean_index - 10)
-    end_index = min(num_price_points, mean_index + 11)
-    max_count = max(price_histogram[start_index:end_index])
+    median_index = int((median_price - min_value) / price_step)
+
+    # Expand the range to cover twice as many price points
+    start_index = max(0, median_index - 20)
+    end_index = min(num_price_points, median_index + 21)
+
+    # Combine every two price points to keep the number of rows similar
+    condensed_histogram = [
+        sum(price_histogram[i : i + 2]) for i in range(start_index, end_index, 2)
+    ]
+    condensed_price_points = [price_points[i] for i in range(start_index, end_index, 2)]
+
+    max_count = max(condensed_histogram)
     histogram_width = 50
-    print(f"\nPrice Distribution for {city} (Mean Price: ${mean_price:.2f}):")
-    for i in range(start_index, end_index):
-        price = price_points[i]
-        count = price_histogram[i]
+    print(f"\nPrice Distribution for {city} (Median Price: ${median_price:.2f}):")
+    for i, price in enumerate(condensed_price_points):
+        lower_price = price
+        upper_price = lower_price + 2 * price_step
+        count = condensed_histogram[i]
         bar_length = int(count / max_count * histogram_width)
-        print(f"${price:8.2f} | {'*' * bar_length}")
+        print(f"${lower_price:8.2f} - ${upper_price:8.2f} | {'*' * bar_length}")
 
 
 if __name__ == "__main__":
     cities = open(utils.getAbsPath("./../cities.txt")).read().split("\n")
-    bedrooms = 2
-    adults = 2
-    ## one week two months from now
-    start_date = (datetime.now() + timedelta(days=61)).strftime("%Y-%m-%d")
-    end_date = (datetime.now() + timedelta(days=61 + 7)).strftime("%Y-%m-%d")
+    bedrooms = config["bedrooms"]
+    adults = config["adults"]
+    max_price_per_night = config["max_price_per_night"]
+    nth_cheapest = config["nth_cheapest"]
+    days_from_now = config["days_from_now"]
+    stay_duration = config["stay_duration"]
+    bottom_nth_percentile = config["bottom_nth_percentile"]
+
+    start_date = (datetime.now() + timedelta(days=days_from_now)).strftime("%Y-%m-%d")
+    end_date = (
+        datetime.now() + timedelta(days=days_from_now + stay_duration)
+    ).strftime("%Y-%m-%d")
     city_price_stats = get_city_price_stats(
-        cities, bedrooms, start_date, end_date, adults
+        cities,
+        bedrooms,
+        start_date,
+        end_date,
+        adults,
+        max_price_per_night,
+        nth_cheapest,
+        bottom_nth_percentile,
     )
 
     # Create a list of dictionaries for each city's stats
     table_data = [
         {
             "City": city,
-            "Mean Price": stats["mean_price"],
+            "Units": stats["units"],
             "Median Price": stats["median_price"],
-            "Bottom n": stats["bottom_n"],
-            "Bottom 30th Percentile": stats["bottom_30_percentile"],
-            "Top 30th Percentile": stats["top_30_percentile"],
+            f"{nth_cheapest}th cheapest": stats["nth_cheapest_price"],
+            f"Bottom {bottom_nth_percentile}th Percentile": stats[
+                "bottom_nth_percentile_price"
+            ],
         }
         for city, stats in city_price_stats.items()
     ]
-    # Sort the table data by mean price in ascending order
-    table_data.sort(key=lambda x: x["Mean Price"])
+    # Sort the table data by median price in ascending order
+    table_data.sort(key=lambda x: x["Median Price"])
 
     for row in table_data:
         city = row["City"]
@@ -283,36 +307,33 @@ if __name__ == "__main__":
             stats["price_histogram"],
             stats["min_value"],
             stats["max_value"],
-            row["Mean Price"],
+            row["Median Price"],
         )
     # Print the table header
     print(
-        "\n\n{:<25} {:<15} {:<15} {:<15} {:<25} {:<20}".format(
+        "\n\n{:<25} {:<20} {:<15} {:<20} {:<25}".format(
             "City",
-            "Mean Price",
+            f"#Units < ${max_price_per_night}/night",
             "Median Price",
-            "Bottom n",
-            "Bottom 30th Percentile",
-            "Top 30th Percentile",
+            f"{nth_cheapest}th cheapest",
+            f"Bottom {bottom_nth_percentile}th Percentile",
         )
     )
-    print("-" * 100)
+    print("-" * 105)  # Increased the line length to accommodate the longer header
 
     # Print the table rows
     for row in table_data:
-        mean_price = row.get("Mean Price")
+        units = row.get("Units")
         median_price = row.get("Median Price")
-        bottom_n = row.get("Bottom n")
-        bottom_percentile = row.get("Bottom 30th Percentile")
-        top_percentile = row.get("Top 30th Percentile")
+        nth_cheapest_price = row.get(f"{nth_cheapest}th cheapest")
+        bottom_percentile = row.get(f"Bottom {bottom_nth_percentile}th Percentile")
         # Format and print the row
         print(
-            "{:<25} ${:<14.2f} ${:<14.2f} ${:<14.2f} ${:<24.2f} ${:<19.2f}".format(
+            "{:<25} {:<20} ${:<14.2f} ${:<19.2f} ${:<24.2f}".format(
                 row["City"],
-                mean_price,
+                units,
                 median_price,
-                bottom_n,
+                nth_cheapest_price,
                 bottom_percentile,
-                top_percentile,
             )
         )

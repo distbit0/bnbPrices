@@ -5,7 +5,6 @@ Chiang Mai, Thailand
 Istanbul, Turkey
 Siggiewi, Malta
 Tbilisi, Georgia
-Sydney, Australia
 Belgrade, Serbia
 Bucharest, Romania
 Krakow, Poland
