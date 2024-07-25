@@ -6,5 +6,5 @@
     "days_from_now": 20,
     "stay_duration": 7,
     "bottom_nth_percentile": 20,
-    "print_histograms": true
+    "print_histograms": false
 }
