@@ -38,6 +38,10 @@ def calculate_heat_index(temperature, humidity):
 def get_weather_data(city):
     """Fetch weather data for a given city using OpenWeatherMap API."""
     api_key = os.getenv("OPENWEATHERMAP_API_KEY")
+    if not api_key:
+        logger.error("OpenWeatherMap API key is missing. Please set the OPENWEATHERMAP_API_KEY environment variable.")
+        return None, None, None
+
     base_url = "http://api.openweathermap.org/data/2.5/weather"
     params = {"q": city, "appid": api_key, "units": "metric"}
     try:
@@ -49,7 +53,10 @@ def get_weather_data(city):
         perceived_temp = calculate_heat_index(temperature, humidity)
         return temperature, humidity, perceived_temp
     except requests.RequestException as e:
-        logger.error(f"Error fetching weather data for {city}: {e}")
+        if response.status_code == 401:
+            logger.error("Invalid OpenWeatherMap API key. Please check your API key and try again.")
+        else:
+            logger.error(f"Error fetching weather data for {city}: {e}")
         return None, None, None
 
 
@@ -309,6 +316,12 @@ def print_price_histogram(city, price_histogram, min_value, max_value, median_pr
 
 
 if __name__ == "__main__":
+    # Check if the OpenWeatherMap API key is set
+    if not os.getenv("OPENWEATHERMAP_API_KEY"):
+        print("Warning: OpenWeatherMap API key is not set. Weather data will not be available.")
+        print("To enable weather data, please set the OPENWEATHERMAP_API_KEY environment variable.")
+        print()
+
     cities = open(utils.getAbsPath("./../cities.txt")).read().split("\n")
     bedrooms = config["bedrooms"]
     adults = config["adults"]
