@@ -17,11 +17,14 @@ jsonFile = os.path.join(currentDir, "../config.json")
 with open(jsonFile, "r") as config_file:
     config = json.load(config_file)
 
+
 def calculate_heat_index(temperature, humidity):
     """Calculate the heat index (perceived temperature) given the actual temperature and humidity."""
-    if temperature < 26.7:  # If temperature is below 80°F, return the actual temperature
+    if (
+        temperature < 26.7
+    ):  # If temperature is below 80°F, return the actual temperature
         return temperature
-    
+
     hi = -42.379 + 2.04901523 * temperature + 10.14333127 * humidity
     hi += -0.22475541 * temperature * humidity
     hi += -6.83783e-3 * temperature**2
@@ -31,15 +34,12 @@ def calculate_heat_index(temperature, humidity):
     hi += -1.99e-6 * temperature**2 * humidity**2
     return hi
 
+
 def get_weather_data(city):
     """Fetch weather data for a given city using OpenWeatherMap API."""
     api_key = os.getenv("OPENWEATHERMAP_API_KEY")
     base_url = "http://api.openweathermap.org/data/2.5/weather"
-    params = {
-        "q": city,
-        "appid": api_key,
-        "units": "metric"
-    }
+    params = {"q": city, "appid": api_key, "units": "metric"}
     response = requests.get(base_url, params=params)
     if response.status_code == 200:
         data = response.json()
@@ -255,10 +255,10 @@ def get_city_price_stats(
                 and cumulative_count >= total_count * (bottom_nth_percentile / 100)
             ):
                 bottom_nth_percentile_price = price
-        
+
         # Get weather data
         temperature, humidity, perceived_temp = get_weather_data(city)
-        
+
         city_stats[city] = {
             "median_price": median_price,
             "nth_cheapest_price": nth_cheapest_price,
@@ -363,7 +363,7 @@ if __name__ == "__main__":
             "Median Price",
             f"{nth_cheapest}th cheapest",
             f"Bottom {bottom_nth_percentile}th Percentile",
-            "Perceived Temp (°C)"
+            "Perceived Temp (°C)",
         )
     )
     print("-" * 125)  # Increased the line length to accommodate the longer header
@@ -383,6 +383,6 @@ if __name__ == "__main__":
                 median_price,
                 nth_cheapest_price,
                 bottom_percentile,
-                perceived_temp if perceived_temp is not None else float('nan')
+                perceived_temp if perceived_temp is not None else float("nan"),
             )
         )
