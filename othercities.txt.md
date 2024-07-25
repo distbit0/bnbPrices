@@ -13,3 +13,4 @@ Plovdiv, Bulgaria
 Tirana, Albania
 Berlin, Germany
 Yerevan, Armenia
+Kuala Lumpur, Malaysia

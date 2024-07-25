@@ -1,20 +1,16 @@
-Patras, Greece
-Thessaloniki, Greece
-Kalamata, Greece
-Rhodes, Greece
-Nafplio, Greece
-Volos, Greece
-Kos, Greece
-Ermoupoli, Greece
-Corfu, Greece
-Athens, Greece
-Naxos, Greece
-Milos, Greece
-Ikaria, Greece
-Samos, Greece
-Lemnos, Greece
-Nafplio, Greece
-Naousa, Greece
-Paleochora, Greece
-Parga, Greece
-Kamari, Greece
+Bangkok, Thailand
+Canggu, Bali, Indonesia
+Sanur, Bali, Indonesia
+Chiang Mai, Thailand
+Istanbul, Turkey
+Tbilisi, Georgia
+Belgrade, Serbia
+Bucharest, Romania
+Krakow, Poland
+Cluj, Romania
+Sofia, Bulgaria
+Plovdiv, Bulgaria
+Tirana, Albania
+Berlin, Germany
+Yerevan, Armenia
+Kuala Lumpur, Malaysia

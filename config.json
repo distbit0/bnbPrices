@@ -3,8 +3,8 @@
     "adults": 2,
     "max_price_per_night": 200,
     "nth_cheapest": 70,
-    "days_from_now": 7,
-    "stay_duration": 10,
+    "days_from_now": 20,
+    "stay_duration": 7,
     "bottom_nth_percentile": 20,
     "print_histograms": false
 }
