@@ -40,14 +40,16 @@ def get_weather_data(city):
     api_key = os.getenv("OPENWEATHERMAP_API_KEY")
     base_url = "http://api.openweathermap.org/data/2.5/weather"
     params = {"q": city, "appid": api_key, "units": "metric"}
-    response = requests.get(base_url, params=params)
-    if response.status_code == 200:
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()  # Raise an exception for bad responses
         data = response.json()
         temperature = data["main"]["temp"]
         humidity = data["main"]["humidity"]
         perceived_temp = calculate_heat_index(temperature, humidity)
         return temperature, humidity, perceived_temp
-    else:
+    except requests.RequestException as e:
+        logger.error(f"Error fetching weather data for {city}: {e}")
         return None, None, None
 
 
@@ -271,6 +273,9 @@ def get_city_price_stats(
             "humidity": humidity,
             "perceived_temp": perceived_temp,
         }
+
+        if temperature is None or humidity is None or perceived_temp is None:
+            logger.warning(f"Weather data not available for {city}")
     return city_stats
 
 
@@ -377,12 +382,12 @@ if __name__ == "__main__":
         perceived_temp = city_price_stats[row["City"]].get("perceived_temp")
         # Format and print the row
         print(
-            "{:<25} {:<20} ${:<14.2f} ${:<19.2f} ${:<24.2f} {:<20.2f}".format(
+            "{:<25} {:<20} ${:<14.2f} ${:<19.2f} ${:<24.2f} {:<20}".format(
                 row["City"],
                 units,
                 median_price,
                 nth_cheapest_price,
                 bottom_percentile,
-                perceived_temp if perceived_temp is not None else float("nan"),
+                f"{perceived_temp:.2f}" if perceived_temp is not None else "N/A",
             )
         )
