@@ -163,7 +163,7 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
     }
 
     response = requests.post(
-        "https://www.airbnb.com/api/v3/DynamicFilters/d41301236ac7e50af23ebb44389773d88e24bc33ad7b88054e5bcb2533a17769",
+        "https://www.airbnb.com.au/api/v3/DynamicFilters/d41301236ac7e50af23ebb44389773d88e24bc33ad7b88054e5bcb2533a17769",
         params=params,
         cookies=cookies,
         headers=headers,
@@ -189,12 +189,15 @@ def get_city_price_stats(
     max_price_per_night,
     nth_cheapest,
     bottom_nth_percentile,
+    stay_duration,
 ):
     city_stats = {}
     for city in cities:
         price_histogram, min_value, max_value = get_price_data(
             city, bedrooms, start_date, end_date, adults
         )
+        min_value /= stay_duration
+        max_value /= stay_duration
         num_price_points = len(price_histogram)
         price_step = (max_value - min_value) / (num_price_points - 1)
         price_points = [min_value + i * price_step for i in range(num_price_points)]
@@ -283,6 +286,7 @@ if __name__ == "__main__":
         max_price_per_night,
         nth_cheapest,
         bottom_nth_percentile,
+        stay_duration,
     )
 
     # Create a list of dictionaries for each city's stats
