@@ -6,7 +6,11 @@ from datetime import datetime, timedelta
 import os
 import json
 from dotenv import load_dotenv
-import math
+import openmeteo_requests
+import requests_cache
+from retry_requests import retry
+from geopy.geocoders import Nominatim
+import pandas as pd
 
 
 load_dotenv()
@@ -18,46 +22,63 @@ with open(jsonFile, "r") as config_file:
     config = json.load(config_file)
 
 
-def calculate_heat_index(temperature, humidity):
-    """Calculate the heat index (perceived temperature) given the actual temperature and humidity."""
-    if (
-        temperature < 26.7
-    ):  # If temperature is below 80°F, return the actual temperature
-        return temperature
+def get_weather_data(city, start_date, end_date):
+    # Setup the Open-Meteo API client with cache and retry on error
+    cache_session = requests_cache.CachedSession(".cache", expire_after=-1)
+    retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+    openmeteo = openmeteo_requests.Client(session=retry_session)
 
-    hi = -42.379 + 2.04901523 * temperature + 10.14333127 * humidity
-    hi += -0.22475541 * temperature * humidity
-    hi += -6.83783e-3 * temperature**2
-    hi += -5.481717e-2 * humidity**2
-    hi += 1.22874e-3 * temperature**2 * humidity
-    hi += 8.5282e-4 * temperature * humidity**2
-    hi += -1.99e-6 * temperature**2 * humidity**2
-    return hi
+    # Get coordinates for the city
+    geolocator = Nominatim(user_agent="weather_app")
+    location = geolocator.geocode(city)
+    if not location:
+        raise ValueError(f"Could not find coordinates for {city}")
 
+    # Convert start_date and end_date to datetime objects
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
-def get_weather_data(city):
-    """Fetch weather data for a given city using OpenWeatherMap API."""
-    api_key = os.getenv("OPENWEATHERMAP_API_KEY")
-    if not api_key:
-        logger.error("OpenWeatherMap API key is missing. Please set the OPENWEATHERMAP_API_KEY environment variable.")
-        return None, None, None
+    # Adjust dates to previous year
+    start_date = start_date.replace(year=start_date.year - 1)
+    end_date = end_date.replace(year=end_date.year - 1)
 
-    base_url = "http://api.openweathermap.org/data/2.5/weather"
-    params = {"q": city, "appid": api_key, "units": "metric"}
-    try:
-        response = requests.get(base_url, params=params)
-        response.raise_for_status()  # Raise an exception for bad responses
-        data = response.json()
-        temperature = data["main"]["temp"]
-        humidity = data["main"]["humidity"]
-        perceived_temp = calculate_heat_index(temperature, humidity)
-        return temperature, humidity, perceived_temp
-    except requests.RequestException as e:
-        if response.status_code == 401:
-            logger.error("Invalid OpenWeatherMap API key. Please check your API key and try again.")
-        else:
-            logger.error(f"Error fetching weather data for {city}: {e}")
-        return None, None, None
+    # Set up API parameters
+    url = "https://archive-api.open-meteo.com/v1/archive"
+    params = {
+        "latitude": location.latitude,
+        "longitude": location.longitude,
+        "start_date": start_date.strftime("%Y-%m-%d"),
+        "end_date": end_date.strftime("%Y-%m-%d"),
+        "daily": "apparent_temperature_mean",
+        "timezone": "auto",
+    }
+
+    # Make API request
+    responses = openmeteo.weather_api(url, params=params)
+
+    # Process first location
+    response = responses[0]
+
+    # Process daily data
+    daily = response.Daily()
+    daily_apparent_temperature_mean = daily.Variables(0).ValuesAsNumpy()
+
+    daily_data = {
+        "date": pd.date_range(
+            start=pd.to_datetime(daily.Time(), unit="s", utc=True),
+            end=pd.to_datetime(daily.TimeEnd(), unit="s", utc=True),
+            freq=pd.Timedelta(seconds=daily.Interval()),
+            inclusive="left",
+        )
+    }
+    daily_data["apparent_temperature_mean"] = daily_apparent_temperature_mean
+
+    daily_dataframe = pd.DataFrame(data=daily_data)
+
+    # Calculate average perceived temperature
+    avg_perceived_temp = daily_dataframe["apparent_temperature_mean"].mean()
+
+    return round(float(avg_perceived_temp), 1)
 
 
 def get_price_data(city, bedrooms, start_date, end_date, adults):
@@ -266,7 +287,7 @@ def get_city_price_stats(
                 bottom_nth_percentile_price = price
 
         # Get weather data
-        temperature, humidity, perceived_temp = get_weather_data(city)
+        perceived_temp = get_weather_data(city, start_date, end_date)
 
         city_stats[city] = {
             "median_price": median_price,
@@ -276,12 +297,10 @@ def get_city_price_stats(
             "min_value": min_value,
             "max_value": max_value,
             "units": filtered_count,
-            "temperature": temperature,
-            "humidity": humidity,
             "perceived_temp": perceived_temp,
         }
 
-        if temperature is None or humidity is None or perceived_temp is None:
+        if perceived_temp is None:
             logger.warning(f"Weather data not available for {city}")
     return city_stats
 
@@ -318,8 +337,12 @@ def print_price_histogram(city, price_histogram, min_value, max_value, median_pr
 if __name__ == "__main__":
     # Check if the OpenWeatherMap API key is set
     if not os.getenv("OPENWEATHERMAP_API_KEY"):
-        print("Warning: OpenWeatherMap API key is not set. Weather data will not be available.")
-        print("To enable weather data, please set the OPENWEATHERMAP_API_KEY environment variable.")
+        print(
+            "Warning: OpenWeatherMap API key is not set. Weather data will not be available."
+        )
+        print(
+            "To enable weather data, please set the OPENWEATHERMAP_API_KEY environment variable."
+        )
         print()
 
     cities = open(utils.getAbsPath("./../cities.txt")).read().split("\n")
