@@ -96,8 +96,7 @@ def get_weather_data(city, start_date, end_date):
     return round(float(avg_max_temperature), 1), round(float(avg_dew_point), 1)
 
 
-def get_price_data(city, bedrooms, start_date, end_date, adults):
-    cookies = {}
+def get_price_data(city, bedrooms, start_date, end_date, adults, max_price):
     apiKey = os.getenv("AIRBNB_API_KEY")
     headers = {
         "x-airbnb-api-key": apiKey,
@@ -112,11 +111,7 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
         "variables": {
             "staysSearchRequest": {
                 "metadataOnly": True,
-                "treatmentFlags": [
-                    "stays_search_rehydration_treatment_desktop",
-                    "stays_search_rehydration_treatment_moweb",
-                    "filter_reordering_2024_price_treatment",
-                ],
+                "treatmentFlags": [],
                 "rawParams": [
                     {
                         "filterName": "adults",
@@ -169,7 +164,7 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
                     {
                         "filterName": "price_filter_input_type",
                         "filterValues": [
-                            "0",
+                            "2",
                         ],
                     },
                     {
@@ -214,15 +209,13 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
                         ],
                     },
                     {
+                        "filterName": "price_max",
+                        "filterValues": [str(max_price)],
+                    },
+                    {
                         "filterName": "tab_id",
                         "filterValues": [
                             "home_tab",
-                        ],
-                    },
-                    {
-                        "filterName": "update_price_histogram",
-                        "filterValues": [
-                            "true",
                         ],
                     },
                 ],
@@ -239,23 +232,20 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
             },
         },
     }
+    print(json.dumps(json_data, indent=4))
 
     response = requests.post(
         "https://www.airbnb.com.au/api/v3/DynamicFilters/d41301236ac7e50af23ebb44389773d88e24bc33ad7b88054e5bcb2533a17769",
         params=params,
-        cookies=cookies,
         headers=headers,
         json=json_data,
     )
-
-    data = response.json()["data"]["presentation"]["staysSearch"]["dynamicFilters"][
-        "sectionReplacementsByID"
-    ][0]["sectionData"]["discreteFilterItems"][0]
-    price_histogram = data["priceHistogram"]
-    min_value = data["minValue"]
-    max_value = data["maxValue"]
-
-    return price_histogram, min_value, max_value
+    unitCount = int(
+        response["data"]["presentation"]["staysSearch"]["dynamicFilters"][
+            "searchButtonText"
+        ].split()[1]
+    )
+    return unitCount
 
 
 @dataclass
@@ -330,7 +320,12 @@ def get_weather_data_with_retry(city, params, max_retries=3, delay=1):
 
 def get_price_and_weather_data(city, params):
     price_histogram, min_value, max_value = get_price_data(
-        city, params.bedrooms, params.start_date, params.end_date, params.adults
+        city,
+        params.bedrooms,
+        params.start_date,
+        params.end_date,
+        params.adults,
+        params.max_price_per_night * params.stay_duration,
     )
     min_value /= params.stay_duration
     max_value /= params.stay_duration
@@ -394,7 +389,7 @@ def getCities():
         correctBeaches = (not config["only_hasbeaches"]) or data["hasbeaches"]
         correctSchengen = (not config["only_nonschengen"]) or (not data["inschengen"])
         correctCountry = (
-            city.split(",")[1].strip().lower() == config["country"].lower()
+            city.split(",")[-1].strip().lower() == config["country"].lower()
         ) or config["country"] == ""
         if correctRegion and correctBeaches and correctSchengen and correctCountry:
             filtered_cities[city] = data

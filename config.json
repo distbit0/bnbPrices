@@ -4,13 +4,13 @@
     "max_price_per_night": 160,
     "nth_cheapest": null,
     "bottom_nth_percentile": null,
-    "days_from_now": 120,
-    "stay_duration": 8,
+    "days_from_now": 15,
+    "stay_duration": 7,
     "onlyNonZeroUnits": false,
     "only_hasbeaches": false,
     "only_nonschengen": false,
     "region": "SEA",
-    "country": "",
+    "country": "Indonesia",
     "show_temp": false,
     "show_dew_point": true
 }
