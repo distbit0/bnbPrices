@@ -232,19 +232,18 @@ def get_price_data(city, bedrooms, start_date, end_date, adults, max_price):
             },
         },
     }
-    print(json.dumps(json_data, indent=4))
-
     response = requests.post(
         "https://www.airbnb.com.au/api/v3/DynamicFilters/d41301236ac7e50af23ebb44389773d88e24bc33ad7b88054e5bcb2533a17769",
         params=params,
         headers=headers,
         json=json_data,
     )
-    unitCount = int(
-        response["data"]["presentation"]["staysSearch"]["dynamicFilters"][
-            "searchButtonText"
-        ].split()[1]
-    )
+    unitCountText = response.json()["data"]["presentation"]["staysSearch"][
+        "dynamicFilters"
+    ]["searchButtonText"]
+    unitCount = 0
+    if unitCountText != "No homes available":
+        unitCount = int(unitCountText.split()[1].replace(",", "").replace("+", ""))
     return unitCount
 
 
@@ -255,47 +254,7 @@ class CitySearchParams:
     end_date: str
     adults: int
     max_price_per_night: float
-    nth_cheapest: int
-    bottom_nth_percentile: float
     stay_duration: int
-
-
-def calculate_price_statistics(price_histogram, min_value, max_value, params):
-    num_price_points = len(price_histogram)
-    price_step = (max_value - min_value) / (num_price_points - 1)
-    price_points = [min_value + i * price_step for i in range(num_price_points)]
-    total_count = sum(price_histogram)
-    cumulative_count = 0
-    median_price = nth_cheapest_price = bottom_nth_percentile_price = None
-    filtered_count = 0
-
-    for price, count in zip(price_points, price_histogram):
-        cumulative_count += count
-        if price <= params.max_price_per_night:
-            filtered_count += count
-        if median_price is None and cumulative_count >= total_count / 2:
-            median_price = price
-        if (
-            nth_cheapest_price is None
-            and params.nth_cheapest is not None
-            and cumulative_count >= min(params.nth_cheapest, total_count)
-        ):
-            nth_cheapest_price = price
-        if (
-            bottom_nth_percentile_price is None
-            and params.bottom_nth_percentile is not None
-            and cumulative_count >= total_count * (params.bottom_nth_percentile / 100)
-        ):
-            bottom_nth_percentile_price = price
-
-    return {
-        "median_price": median_price,
-        "nth_cheapest_price": nth_cheapest_price,
-        "bottom_nth_percentile_price": bottom_nth_percentile_price,
-        "min_value": min_value,
-        "max_value": max_value,
-        "units": filtered_count,
-    }
 
 
 def get_weather_data_with_retry(city, params, max_retries=3, delay=1):
@@ -318,8 +277,8 @@ def get_weather_data_with_retry(city, params, max_retries=3, delay=1):
             return None, None
 
 
-def get_price_and_weather_data(city, params):
-    price_histogram, min_value, max_value = get_price_data(
+def process_city(city, params, weather_data):
+    unitCount = get_price_data(
         city,
         params.bedrooms,
         params.start_date,
@@ -327,32 +286,25 @@ def get_price_and_weather_data(city, params):
         params.adults,
         params.max_price_per_night * params.stay_duration,
     )
-    min_value /= params.stay_duration
-    max_value /= params.stay_duration
-    return price_histogram, min_value, max_value
 
-
-def process_city(city, params, weather_data):
-    price_histogram, min_value, max_value = get_price_and_weather_data(city, params)
-    price_stats = calculate_price_statistics(
-        price_histogram, min_value, max_value, params
-    )
-    if price_stats["units"] == 0 and config["onlyNonZeroUnits"]:
+    if unitCount == 0 and config["onlyNonZeroUnits"]:
         return None
 
     temperature, dew_point = weather_data.get(city, (None, None))
     if temperature is None or dew_point is None:
         logger.warning(f"Weather data not available for {city}")
 
-    return city, {
-        **price_stats,
-        "price_histogram": price_histogram,
-        "temperature": temperature,
-        "dew_point": dew_point,
-    }
+    return (
+        city,
+        {
+            "units": unitCount,
+            "temperature": temperature,
+            "dew_point": dew_point,
+        },
+    )
 
 
-def get_city_price_stats(cities, params):
+def get_city_info(cities, params):
     # Fetch weather data sequentially with rate limiting
     weather_data = {}
     for city in cities:
@@ -362,7 +314,7 @@ def get_city_price_stats(cities, params):
         sys.stdout.flush()
         temperature, dew_point = get_weather_data_with_retry(city, params)
         weather_data[city] = (temperature, dew_point)
-        time.sleep(0.2)
+        time.sleep(0.1)
     print()
 
     city_stats = {}
@@ -397,39 +349,39 @@ def getCities():
     return cities
 
 
-def print_city_price_stats(city_price_stats, config):
+def print_city_price_stats(city_info, config):
     max_price_per_night = config["max_price_per_night"]
-    nth_cheapest = config["nth_cheapest"]
-    bottom_nth_percentile = config["bottom_nth_percentile"]
-
     # Prepare the table data
     table_data = []
     headers = [
         "City",
         f"#Units < ${max_price_per_night}/night",
-        "Median Price",
     ]
 
-    if nth_cheapest is not None:
-        headers.append(f"{nth_cheapest}th cheapest")
-    if bottom_nth_percentile is not None:
-        headers.append(f"Bottom {bottom_nth_percentile}th Percentile")
     if config["show_temp"]:
         headers.append("Avg Max Daily Temp (°C)")
     if config["show_dew_point"]:
         headers.append("Dew Point (°C)")
 
-    for city, stats in city_price_stats.items():
+    for city, stats in city_info.items():
+        dewPointTooLow = (
+            config["max_dew_point"]
+            and float(stats["dew_point"]) > config["max_dew_point"]
+        )
+        tempTooLow = (
+            config["min_temperature"]
+            and float(stats["temperature"]) < config["min_temperature"]
+        )
+        tempTooHigh = (
+            config["max_temperature"]
+            and float(stats["temperature"]) > config["max_temperature"]
+        )
+        if dewPointTooLow or tempTooLow or tempTooHigh:
+            continue
         row = [
             city,
             stats["units"],
-            f"${stats['median_price']:.2f}",
         ]
-
-        if nth_cheapest is not None:
-            row.append(f"${stats['nth_cheapest_price']:.2f}")
-        if bottom_nth_percentile is not None:
-            row.append(f"${stats['bottom_nth_percentile_price']:.2f}")
         if config["show_temp"]:
             row.append(f"{stats['temperature']:.2f}")
         if config["show_dew_point"]:
@@ -438,7 +390,7 @@ def print_city_price_stats(city_price_stats, config):
         table_data.append(row)
 
     # Sort the table data by median price
-    table_data.sort(key=lambda row: float(row[2].replace("$", "")), reverse=False)
+    table_data.sort(key=lambda row: row[1], reverse=True)
 
     # Print the table
     print("\n" + tabulate(table_data, headers=headers, tablefmt="grid"))
@@ -449,10 +401,8 @@ if __name__ == "__main__":
     bedrooms = config["bedrooms"]
     adults = config["adults"]
     max_price_per_night = config["max_price_per_night"]
-    nth_cheapest = config["nth_cheapest"]
     days_from_now = config["days_from_now"]
     stay_duration = config["stay_duration"]
-    bottom_nth_percentile = config["bottom_nth_percentile"]
 
     start_date = (datetime.now() + timedelta(days=days_from_now)).strftime("%Y-%m-%d")
     end_date = (
@@ -464,11 +414,9 @@ if __name__ == "__main__":
         end_date=end_date,
         adults=adults,
         max_price_per_night=max_price_per_night,
-        nth_cheapest=nth_cheapest,
-        bottom_nth_percentile=bottom_nth_percentile,
         stay_duration=stay_duration,
     )
 
-    city_price_stats = get_city_price_stats(cities, params)
+    city_info = get_city_info(cities, params)
 
-    print_city_price_stats(city_price_stats, config)
+    print_city_price_stats(city_info, config)
