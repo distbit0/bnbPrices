@@ -125,17 +125,17 @@
         "inschengen": true
     },
     "Patras, Greece": {
-        "region": "easteuro",
+        "region": "westeuro",
         "hasbeaches": true,
         "inschengen": true
     },
     "Thessaloniki, Greece": {
-        "region": "easteuro",
+        "region": "westeuro",
         "hasbeaches": false,
         "inschengen": true
     },
     "Kalamata, Greece": {
-        "region": "easteuro",
+        "region": "westeuro",
         "hasbeaches": true,
         "inschengen": true
     },
