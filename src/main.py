@@ -342,13 +342,13 @@ def print_city_price_stats(city_price_stats, config):
     ]
 
     if nth_cheapest is not None:
-        headers.insert(3, f"{nth_cheapest}th cheapest")
+        headers.append(f"{nth_cheapest}th cheapest")
     if bottom_nth_percentile is not None:
-        headers.insert(-2, f"Bottom {bottom_nth_percentile}th Percentile")
+        headers.append(f"Bottom {bottom_nth_percentile}th Percentile")
     if config["show_temp"]:
-        headers.insert(2, "Temp (°C)")
+        headers.append("Temp (°C)")
     if config["show_dew_point"]:
-        headers.insert(1, "Dew Point (°C)")
+        headers.append("Dew Point (°C)")
 
     for city, stats in city_price_stats.items():
         row = [
@@ -358,24 +358,18 @@ def print_city_price_stats(city_price_stats, config):
         ]
 
         if nth_cheapest is not None:
-            row.insert(3, f"${stats['nth_cheapest_price']:.2f}")
+            row.append(f"${stats['nth_cheapest_price']:.2f}")
         if bottom_nth_percentile is not None:
-            row.insert(-2, f"${stats['bottom_nth_percentile_price']:.2f}")
+            row.append(f"${stats['bottom_nth_percentile_price']:.2f}")
         if config["show_temp"]:
-            row.insert(2, f"{stats['temperature']:.2f}")
+            row.append(f"{stats['temperature']:.2f}")
         if config["show_dew_point"]:
-            row.insert(1, f"{stats['dew_point']:.2f}")
+            row.append(f"{stats['dew_point']:.2f}")
 
         table_data.append(row)
 
     # Sort the table data by median price
-    def get_median_price(row):
-        price = row[2]
-        if isinstance(price, str):
-            return float(price.replace("$", ""))
-        return float(price)
-
-    table_data.sort(key=get_median_price)
+    table_data.sort(key=lambda row: row[1], reverse=True)
 
     # Print the table
     print("\n" + tabulate(table_data, headers=headers, tablefmt="grid"))
