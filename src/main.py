@@ -82,11 +82,18 @@ def get_weather_data(city, start_date, end_date):
 
     hourly_dataframe = pd.DataFrame(data=hourly_data)
 
-    # Calculate average temperature and dew point
-    avg_temperature = hourly_dataframe["temperature_2m"].mean()
+    # Group by date and calculate the maximum temperature for each day
+    daily_max_temp = hourly_dataframe.groupby(hourly_dataframe["date"].dt.date)[
+        "temperature_2m"
+    ].max()
+
+    # Calculate the average of daily maximum temperatures
+    avg_max_temperature = daily_max_temp.mean()
+
+    # Calculate average dew point (unchanged)
     avg_dew_point = hourly_dataframe["dew_point_2m"].mean()
 
-    return round(float(avg_temperature), 1), round(float(avg_dew_point), 1)
+    return round(float(avg_max_temperature), 1), round(float(avg_dew_point), 1)
 
 
 def get_price_data(city, bedrooms, start_date, end_date, adults):
@@ -413,7 +420,7 @@ def print_city_price_stats(city_price_stats, config):
     if bottom_nth_percentile is not None:
         headers.append(f"Bottom {bottom_nth_percentile}th Percentile")
     if config["show_temp"]:
-        headers.append("Temp (°C)")
+        headers.append("Avg Max Daily Temp (°C)")
     if config["show_dew_point"]:
         headers.append("Dew Point (°C)")
 

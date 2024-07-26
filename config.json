@@ -4,7 +4,7 @@
     "max_price_per_night": 160,
     "nth_cheapest": null,
     "bottom_nth_percentile": null,
-    "days_from_now": 115,
+    "days_from_now": 120,
     "stay_duration": 8,
     "onlyNonZeroUnits": false,
     "only_hasbeaches": false,
