@@ -13,7 +13,8 @@ from retry_requests import retry
 from geopy.geocoders import Nominatim
 import sys
 import pandas as pd
-
+from dataclasses import dataclass
+import concurrent.futures
 
 load_dotenv()
 
@@ -248,73 +249,116 @@ def get_price_data(city, bedrooms, start_date, end_date, adults):
     return price_histogram, min_value, max_value
 
 
-def get_city_price_stats(
-    cities,
-    bedrooms,
-    start_date,
-    end_date,
-    adults,
-    max_price_per_night,
-    nth_cheapest,
-    bottom_nth_percentile,
-    stay_duration,
-):
-    city_stats = {}
-    for i, city in enumerate(cities):
-        progress = f"Progress: {i+1}/{len(cities)}"
-        sys.stdout.write("\r" + progress)
-        sys.stdout.flush()
-        price_histogram, min_value, max_value = get_price_data(
-            city, bedrooms, start_date, end_date, adults
+@dataclass
+class CitySearchParams:
+    bedrooms: int
+    start_date: str
+    end_date: str
+    adults: int
+    max_price_per_night: float
+    nth_cheapest: int
+    bottom_nth_percentile: float
+    stay_duration: int
+
+
+def get_price_and_weather_data(city, params):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        price_future = executor.submit(
+            get_price_data,
+            city,
+            params.bedrooms,
+            params.start_date,
+            params.end_date,
+            params.adults,
         )
-        min_value /= stay_duration
-        max_value /= stay_duration
-        num_price_points = len(price_histogram)
-        price_step = (max_value - min_value) / (num_price_points - 1)
-        price_points = [min_value + i * price_step for i in range(num_price_points)]
-        total_count = sum(price_histogram)
-        cumulative_count = 0
-        median_price = None
-        bottom_nth_percentile_price = None
-        nth_cheapest_price = None
-        filtered_count = 0
-        for price, count in zip(price_points, price_histogram):
-            cumulative_count += count
-            if price <= max_price_per_night:
-                filtered_count += count
-            if median_price is None and cumulative_count >= total_count / 2:
-                median_price = price
-            if (
-                nth_cheapest_price is None
-                and nth_cheapest is not None
-                and (cumulative_count >= min(nth_cheapest, total_count))
-            ):
-                nth_cheapest_price = price
-            if (
-                bottom_nth_percentile_price is None
-                and bottom_nth_percentile is not None
-                and cumulative_count >= total_count * (bottom_nth_percentile / 100)
-            ):
-                bottom_nth_percentile_price = price
-        if filtered_count == 0 and config["onlyNonZeroUnits"]:
-            continue
-        # Get weather data
-        temperature, dew_point = get_weather_data(city, start_date, end_date)
+        weather_future = executor.submit(
+            get_weather_data, city, params.start_date, params.end_date
+        )
 
-        city_stats[city] = {
-            "median_price": median_price,
-            "nth_cheapest_price": nth_cheapest_price,
-            "bottom_nth_percentile_price": bottom_nth_percentile_price,
-            "price_histogram": price_histogram,
-            "min_value": min_value,
-            "max_value": max_value,
-            "units": filtered_count,
-            "temperature": temperature,
-            "dew_point": dew_point,
-        }
+        price_histogram, min_value, max_value = price_future.result()
+        temperature, dew_point = weather_future.result()
 
-        if temperature is None or dew_point is None:
-            logger.warning(f"Weather data not available for {city}")
+    min_value /= params.stay_duration
+    max_value /= params.stay_duration
+
+    return price_histogram, min_value, max_value, temperature, dew_point
+
+
+def calculate_price_statistics(price_histogram, min_value, max_value, params):
+    num_price_points = len(price_histogram)
+    price_step = (max_value - min_value) / (num_price_points - 1)
+    price_points = [min_value + i * price_step for i in range(num_price_points)]
+    total_count = sum(price_histogram)
+    cumulative_count = 0
+    median_price = nth_cheapest_price = bottom_nth_percentile_price = None
+    filtered_count = 0
+
+    for price, count in zip(price_points, price_histogram):
+        cumulative_count += count
+        if price <= params.max_price_per_night:
+            filtered_count += count
+        if median_price is None and cumulative_count >= total_count / 2:
+            median_price = price
+        if (
+            nth_cheapest_price is None
+            and params.nth_cheapest is not None
+            and cumulative_count >= min(params.nth_cheapest, total_count)
+        ):
+            nth_cheapest_price = price
+        if (
+            bottom_nth_percentile_price is None
+            and params.bottom_nth_percentile is not None
+            and cumulative_count >= total_count * (params.bottom_nth_percentile / 100)
+        ):
+            bottom_nth_percentile_price = price
+
+    return {
+        "median_price": median_price,
+        "nth_cheapest_price": nth_cheapest_price,
+        "bottom_nth_percentile_price": bottom_nth_percentile_price,
+        "min_value": min_value,
+        "max_value": max_value,
+        "units": filtered_count,
+    }
+
+
+def process_city(city, params):
+    price_histogram, min_value, max_value, temperature, dew_point = (
+        get_price_and_weather_data(city, params)
+    )
+
+    price_stats = calculate_price_statistics(
+        price_histogram, min_value, max_value, params
+    )
+
+    if price_stats["units"] == 0 and config["onlyNonZeroUnits"]:
+        return None
+
+    if temperature is None or dew_point is None:
+        logger.warning(f"Weather data not available for {city}")
+
+    return city, {
+        **price_stats,
+        "price_histogram": price_histogram,
+        "temperature": temperature,
+        "dew_point": dew_point,
+    }
+
+
+def get_city_price_stats(cities, params):
+    city_stats = {}
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process_city, city, params) for city in cities]
+
+        for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
+            sys.stdout.write(f"\rProgress: {i}/{len(cities)}")
+            sys.stdout.flush()
+
+            result = future.result()
+            if result:
+                city, stats = result
+                city_stats[city] = stats
+
     print()
     return city_stats
 
@@ -396,16 +440,17 @@ if __name__ == "__main__":
     end_date = (
         datetime.now() + timedelta(days=days_from_now + stay_duration)
     ).strftime("%Y-%m-%d")
-    city_price_stats = get_city_price_stats(
-        cities,
-        bedrooms,
-        start_date,
-        end_date,
-        adults,
-        max_price_per_night,
-        nth_cheapest,
-        bottom_nth_percentile,
-        stay_duration,
+    params = CitySearchParams(
+        bedrooms=bedrooms,
+        start_date=start_date,
+        end_date=end_date,
+        adults=adults,
+        max_price_per_night=max_price_per_night,
+        nth_cheapest=nth_cheapest,
+        bottom_nth_percentile=bottom_nth_percentile,
+        stay_duration=stay_duration,
     )
+
+    city_price_stats = get_city_price_stats(cities, params)
 
     print_city_price_stats(city_price_stats, config)

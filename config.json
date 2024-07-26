@@ -2,7 +2,7 @@
     "bedrooms": 2,
     "adults": 2,
     "max_price_per_night": 160,
-    "nth_cheapest": 50,
+    "nth_cheapest": null,
     "bottom_nth_percentile": null,
     "days_from_now": 115,
     "stay_duration": 7,
