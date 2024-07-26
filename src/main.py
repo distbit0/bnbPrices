@@ -11,6 +11,7 @@ import openmeteo_requests
 import requests_cache
 from retry_requests import retry
 from geopy.geocoders import Nominatim
+import sys
 import pandas as pd
 
 
@@ -260,7 +261,9 @@ def get_city_price_stats(
 ):
     city_stats = {}
     for i, city in enumerate(cities):
-        print("Progress: ", i, "/", len(cities))
+        progress = f"Progress: {i+1}/{len(cities)}"
+        sys.stdout.write("\r" + progress)
+        sys.stdout.flush()
         price_histogram, min_value, max_value = get_price_data(
             city, bedrooms, start_date, end_date, adults
         )
@@ -312,6 +315,7 @@ def get_city_price_stats(
 
         if temperature is None or dew_point is None:
             logger.warning(f"Weather data not available for {city}")
+    print()
     return city_stats
 
 
@@ -369,7 +373,7 @@ def print_city_price_stats(city_price_stats, config):
         table_data.append(row)
 
     # Sort the table data by median price
-    table_data.sort(key=lambda row: row[1], reverse=True)
+    table_data.sort(key=lambda row: float(row[2].replace("$", "")), reverse=False)
 
     # Print the table
     print("\n" + tabulate(table_data, headers=headers, tablefmt="grid"))

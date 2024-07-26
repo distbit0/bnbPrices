@@ -6,9 +6,9 @@
     "bottom_nth_percentile": null,
     "days_from_now": 15,
     "stay_duration": 14,
-    "onlyNonZeroUnits": true,
+    "onlyNonZeroUnits": false,
     "only_hasbeaches": true,
-    "only_nonschengen": false,
+    "only_nonschengen": true,
     "region": "",
     "show_temp": false,
     "show_dew_point": true
