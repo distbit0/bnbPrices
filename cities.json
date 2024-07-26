@@ -1,0 +1,272 @@
+{
+    "Bangkok, Thailand": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Chiang Mai, Thailand": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Tbilisi, Georgia": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Belgrade, Serbia": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Bucharest, Romania": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Krakow, Poland": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Cluj, Romania": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Sofia, Bulgaria": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Plovdiv, Bulgaria": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Tirana, Albania": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Berlin, Germany": {
+        "region": "westeuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Yerevan, Armenia": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Kuala Lumpur, Malaysia": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Seoul, South Korea": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Pula, Croatia": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Bol, Croatia": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Rijeka, Croatia": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Split, Croatia": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Hvar, Croatia": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Portimao, Portugal": {
+        "region": "westeuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Vlore, Albania": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Constanta, Romania": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Valencia, Spain": {
+        "region": "westeuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Malaga, Spain": {
+        "region": "westeuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Bari, Italy": {
+        "region": "westeuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Varna, Bulgaria": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Patras, Greece": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Thessaloniki, Greece": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Kalamata, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Rhodes, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Nafplio, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Volos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Kos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Ermoupoli, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Corfu, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Naxos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Milos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Ikaria, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Samos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Lemnos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Valletta, Malta": {
+        "region": "westeuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Naousa, Greece": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Paleochora, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Parga, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Kamari, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Phuket, Thailand": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Kota Kinabalu, Malaysia": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Ko Samui, Thailand": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Dhermi, Albania": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Saranda, Albania": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Ksamil, Albania": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Canggu, Bali, Indonesia": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Sanur, Bali, Indonesia": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Istanbul, Turkey": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": false
+    }
+}

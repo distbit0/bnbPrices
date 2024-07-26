@@ -285,7 +285,8 @@ def get_city_price_stats(
                 and cumulative_count >= total_count * (bottom_nth_percentile / 100)
             ):
                 bottom_nth_percentile_price = price
-
+        if filtered_count == 0 and config["onlyNonZeroUnits"]:
+            continue
         # Get weather data
         perceived_temp = get_weather_data(city, start_date, end_date)
 
@@ -334,18 +335,21 @@ def print_price_histogram(city, price_histogram, min_value, max_value, median_pr
         print(f"${lower_price:8.2f} - ${upper_price:8.2f} | {'*' * bar_length}")
 
 
-if __name__ == "__main__":
-    # Check if the OpenWeatherMap API key is set
-    if not os.getenv("OPENWEATHERMAP_API_KEY"):
-        print(
-            "Warning: OpenWeatherMap API key is not set. Weather data will not be available."
-        )
-        print(
-            "To enable weather data, please set the OPENWEATHERMAP_API_KEY environment variable."
-        )
-        print()
+def getCities():
+    cities = json.loads(open(utils.getAbsPath("./../cities.json")).read())
+    filtered_cities = {}
+    for city, data in cities.items():
+        correctRegion = data["region"] != config["region"]
+        correctWater = (not config["only_onwater"]) or data["onwater"]
+        correctSchengen = (not config["only_nonschengen"]) or (not data["inschengen"])
+        if correctRegion and correctWater and correctSchengen:
+            filtered_cities[city] = data
+    cities = dict(filtered_cities)
+    return cities
 
-    cities = open(utils.getAbsPath("./../cities.txt")).read().split("\n")
+
+if __name__ == "__main__":
+    cities = getCities()
     bedrooms = config["bedrooms"]
     adults = config["adults"]
     max_price_per_night = config["max_price_per_night"]

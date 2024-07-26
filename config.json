@@ -5,6 +5,10 @@
     "nth_cheapest": 70,
     "days_from_now": 20,
     "stay_duration": 7,
+    "onlyNonZeroUnits": true,
     "bottom_nth_percentile": 20,
-    "print_histograms": false
+    "print_histograms": false,
+    "only_hasbeaches": true,
+    "only_nonschengen": true,
+    "region": "SEA"
 }
