@@ -4,12 +4,13 @@
     "max_price_per_night": 160,
     "nth_cheapest": 50,
     "bottom_nth_percentile": null,
-    "days_from_now": 15,
-    "stay_duration": 14,
+    "days_from_now": 115,
+    "stay_duration": 7,
     "onlyNonZeroUnits": false,
-    "only_hasbeaches": true,
-    "only_nonschengen": true,
-    "region": "",
+    "only_hasbeaches": false,
+    "only_nonschengen": false,
+    "region": "SEA",
+    "country": "",
     "show_temp": false,
     "show_dew_point": true
 }

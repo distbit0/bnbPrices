@@ -326,7 +326,10 @@ def getCities():
         correctRegion = data["region"] == config["region"] or config["region"] == ""
         correctBeaches = (not config["only_hasbeaches"]) or data["hasbeaches"]
         correctSchengen = (not config["only_nonschengen"]) or (not data["inschengen"])
-        if correctRegion and correctBeaches and correctSchengen:
+        correctCountry = (
+            city.split(",")[1].strip().lower() == config["country"].lower()
+        ) or config["country"] == ""
+        if correctRegion and correctBeaches and correctSchengen and correctCountry:
             filtered_cities[city] = data
     cities = dict(filtered_cities)
     return cities

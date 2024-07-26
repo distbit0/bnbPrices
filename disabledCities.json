@@ -1,0 +1,77 @@
+{
+    "Rhodes, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Nafplio, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Volos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Kos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Ermoupoli, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Corfu, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Naxos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Milos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Ikaria, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Samos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Lemnos, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Naousa, Greece": {
+        "region": "easteuro",
+        "hasbeaches": false,
+        "inschengen": true
+    },
+    "Paleochora, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Parga, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Kamari, Greece": {
+        "region": "easteuro",
+        "hasbeaches": true,
+        "inschengen": true
+    }
+}

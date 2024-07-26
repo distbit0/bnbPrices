@@ -94,11 +94,6 @@
         "hasbeaches": true,
         "inschengen": true
     },
-    "Portimao, Portugal": {
-        "region": "westeuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
     "Vlore, Albania": {
         "region": "easteuro",
         "hasbeaches": true,
@@ -110,6 +105,11 @@
         "inschengen": true
     },
     "Valencia, Spain": {
+        "region": "westeuro",
+        "hasbeaches": true,
+        "inschengen": true
+    },
+    "Valletta, Malta": {
         "region": "westeuro",
         "hasbeaches": true,
         "inschengen": true
@@ -131,7 +131,7 @@
     },
     "Patras, Greece": {
         "region": "easteuro",
-        "hasbeaches": false,
+        "hasbeaches": true,
         "inschengen": true
     },
     "Thessaloniki, Greece": {
@@ -140,86 +140,6 @@
         "inschengen": true
     },
     "Kalamata, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Rhodes, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Nafplio, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Volos, Greece": {
-        "region": "easteuro",
-        "hasbeaches": false,
-        "inschengen": true
-    },
-    "Kos, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Ermoupoli, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Corfu, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Naxos, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Milos, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Ikaria, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Samos, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Lemnos, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Valletta, Malta": {
-        "region": "westeuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Naousa, Greece": {
-        "region": "easteuro",
-        "hasbeaches": false,
-        "inschengen": true
-    },
-    "Paleochora, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Parga, Greece": {
-        "region": "easteuro",
-        "hasbeaches": true,
-        "inschengen": true
-    },
-    "Kamari, Greece": {
         "region": "easteuro",
         "hasbeaches": true,
         "inschengen": true
@@ -272,6 +192,26 @@
     "Himare, Albania": {
         "region": "easteuro",
         "hasbeaches": true,
+        "inschengen": false
+    },
+    "Kaohsiung, Taiwan": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Busan, South Korea": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Ha Long, Vietnam": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Baguio, Philippines": {
+        "region": "SEA",
+        "hasbeaches": false,
         "inschengen": false
     }
 }
