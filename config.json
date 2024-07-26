@@ -10,7 +10,10 @@
     "max_dew_point": 21.5,
     "max_temperature": null,
     "min_temperature": 8,
-    "region": "SEA",
+    "regions": [
+        "westeuro",
+        "easteuro"
+    ],
     "country": "",
     "show_temp": true,
     "show_dew_point": true

@@ -337,7 +337,7 @@ def getCities():
     cities = json.loads(open(utils.getAbsPath("./../cities.json")).read())
     filtered_cities = {}
     for city, data in cities.items():
-        correctRegion = data["region"] == config["region"] or config["region"] == ""
+        correctRegion = data["region"] in config["regions"] or config["regions"] == []
         correctBeaches = (not config["only_hasbeaches"]) or data["hasbeaches"]
         correctSchengen = (not config["only_nonschengen"]) or (not data["inschengen"])
         correctCountry = (
