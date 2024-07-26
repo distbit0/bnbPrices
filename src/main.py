@@ -15,6 +15,8 @@ import sys
 import pandas as pd
 from dataclasses import dataclass
 import concurrent.futures
+import time
+import geopy
 
 load_dotenv()
 
@@ -261,29 +263,6 @@ class CitySearchParams:
     stay_duration: int
 
 
-def get_price_and_weather_data(city, params):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        price_future = executor.submit(
-            get_price_data,
-            city,
-            params.bedrooms,
-            params.start_date,
-            params.end_date,
-            params.adults,
-        )
-        weather_future = executor.submit(
-            get_weather_data, city, params.start_date, params.end_date
-        )
-
-        price_histogram, min_value, max_value = price_future.result()
-        temperature, dew_point = weather_future.result()
-
-    min_value /= params.stay_duration
-    max_value /= params.stay_duration
-
-    return price_histogram, min_value, max_value, temperature, dew_point
-
-
 def calculate_price_statistics(price_histogram, min_value, max_value, params):
     num_price_points = len(price_histogram)
     price_step = (max_value - min_value) / (num_price_points - 1)
@@ -322,18 +301,44 @@ def calculate_price_statistics(price_histogram, min_value, max_value, params):
     }
 
 
-def process_city(city, params):
-    price_histogram, min_value, max_value, temperature, dew_point = (
-        get_price_and_weather_data(city, params)
-    )
+def get_weather_data_with_retry(city, params, max_retries=3, delay=1):
+    for attempt in range(max_retries):
+        try:
+            return get_weather_data(city, params.start_date, params.end_date)
+        except (
+            geopy.exc.GeocoderRateLimited
+        ):  # Assume this exception is raised when rate limited
+            if attempt < max_retries - 1:
+                time.sleep(delay)
+                delay *= 2
+            else:
+                logger.warning(
+                    f"Weather data not available for {city} due to rate limiting"
+                )
+                return None, None
+        except Exception as e:
+            logger.error(f"Error fetching weather data for {city}: {str(e)}")
+            return None, None
 
+
+def get_price_and_weather_data(city, params):
+    price_histogram, min_value, max_value = get_price_data(
+        city, params.bedrooms, params.start_date, params.end_date, params.adults
+    )
+    min_value /= params.stay_duration
+    max_value /= params.stay_duration
+    return price_histogram, min_value, max_value
+
+
+def process_city(city, params, weather_data):
+    price_histogram, min_value, max_value = get_price_and_weather_data(city, params)
     price_stats = calculate_price_statistics(
         price_histogram, min_value, max_value, params
     )
-
     if price_stats["units"] == 0 and config["onlyNonZeroUnits"]:
         return None
 
+    temperature, dew_point = weather_data.get(city, (None, None))
     if temperature is None or dew_point is None:
         logger.warning(f"Weather data not available for {city}")
 
@@ -346,19 +351,30 @@ def process_city(city, params):
 
 
 def get_city_price_stats(cities, params):
+    # Fetch weather data sequentially with rate limiting
+    weather_data = {}
+    for city in cities:
+        sys.stdout.write(
+            f"\rFetching weather data: {len(weather_data)+1}/{len(cities)}"
+        )
+        sys.stdout.flush()
+        temperature, dew_point = get_weather_data_with_retry(city, params)
+        weather_data[city] = (temperature, dew_point)
+        time.sleep(0.2)
+    print()
+
     city_stats = {}
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_city, city, params) for city in cities]
-
+        futures = [
+            executor.submit(process_city, city, params, weather_data) for city in cities
+        ]
         for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
-            sys.stdout.write(f"\rProgress: {i}/{len(cities)}")
+            sys.stdout.write(f"\rProcessing cities: {i}/{len(cities)}")
             sys.stdout.flush()
-
             result = future.result()
             if result:
                 city, stats = result
                 city_stats[city] = stats
-
     print()
     return city_stats
 
