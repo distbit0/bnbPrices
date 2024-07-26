@@ -7,7 +7,7 @@
     "onlyNonZeroUnits": true,
     "only_hasbeaches": false,
     "only_nonschengen": false,
-    "max_dew_point": 21.5,
+    "max_dew_point": null,
     "max_temperature": null,
     "min_temperature": 8,
     "region": "SEA",
