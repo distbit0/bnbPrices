@@ -1,4 +1,5 @@
 import pysnooper
+from tabulate import tabulate
 import utils
 from utils import logger as logger
 import requests
@@ -49,7 +50,7 @@ def get_weather_data(city, start_date, end_date):
         "longitude": location.longitude,
         "start_date": start_date.strftime("%Y-%m-%d"),
         "end_date": end_date.strftime("%Y-%m-%d"),
-        "daily": "apparent_temperature_mean",
+        "hourly": ["temperature_2m", "dew_point_2m"],
         "timezone": "auto",
     }
 
@@ -59,26 +60,29 @@ def get_weather_data(city, start_date, end_date):
     # Process first location
     response = responses[0]
 
-    # Process daily data
-    daily = response.Daily()
-    daily_apparent_temperature_mean = daily.Variables(0).ValuesAsNumpy()
+    # Process hourly data
+    hourly = response.Hourly()
+    hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
+    hourly_dew_point_2m = hourly.Variables(1).ValuesAsNumpy()
 
-    daily_data = {
+    hourly_data = {
         "date": pd.date_range(
-            start=pd.to_datetime(daily.Time(), unit="s", utc=True),
-            end=pd.to_datetime(daily.TimeEnd(), unit="s", utc=True),
-            freq=pd.Timedelta(seconds=daily.Interval()),
+            start=pd.to_datetime(hourly.Time(), unit="s", utc=True),
+            end=pd.to_datetime(hourly.TimeEnd(), unit="s", utc=True),
+            freq=pd.Timedelta(seconds=hourly.Interval()),
             inclusive="left",
         )
     }
-    daily_data["apparent_temperature_mean"] = daily_apparent_temperature_mean
+    hourly_data["temperature_2m"] = hourly_temperature_2m
+    hourly_data["dew_point_2m"] = hourly_dew_point_2m
 
-    daily_dataframe = pd.DataFrame(data=daily_data)
+    hourly_dataframe = pd.DataFrame(data=hourly_data)
 
-    # Calculate average perceived temperature
-    avg_perceived_temp = daily_dataframe["apparent_temperature_mean"].mean()
+    # Calculate average temperature and dew point
+    avg_temperature = hourly_dataframe["temperature_2m"].mean()
+    avg_dew_point = hourly_dataframe["dew_point_2m"].mean()
 
-    return round(float(avg_perceived_temp), 1)
+    return round(float(avg_temperature), 1), round(float(avg_dew_point), 1)
 
 
 def get_price_data(city, bedrooms, start_date, end_date, adults):
@@ -255,7 +259,8 @@ def get_city_price_stats(
     stay_duration,
 ):
     city_stats = {}
-    for city in cities:
+    for i, city in enumerate(cities):
+        print("Progress: ", i, "/", len(cities))
         price_histogram, min_value, max_value = get_price_data(
             city, bedrooms, start_date, end_date, adults
         )
@@ -276,19 +281,22 @@ def get_city_price_stats(
                 filtered_count += count
             if median_price is None and cumulative_count >= total_count / 2:
                 median_price = price
-            if nth_cheapest_price is None and (
-                cumulative_count >= min(nth_cheapest, total_count)
+            if (
+                nth_cheapest_price is None
+                and nth_cheapest is not None
+                and (cumulative_count >= min(nth_cheapest, total_count))
             ):
                 nth_cheapest_price = price
             if (
                 bottom_nth_percentile_price is None
+                and bottom_nth_percentile is not None
                 and cumulative_count >= total_count * (bottom_nth_percentile / 100)
             ):
                 bottom_nth_percentile_price = price
         if filtered_count == 0 and config["onlyNonZeroUnits"]:
             continue
         # Get weather data
-        perceived_temp = get_weather_data(city, start_date, end_date)
+        temperature, dew_point = get_weather_data(city, start_date, end_date)
 
         city_stats[city] = {
             "median_price": median_price,
@@ -298,54 +306,79 @@ def get_city_price_stats(
             "min_value": min_value,
             "max_value": max_value,
             "units": filtered_count,
-            "perceived_temp": perceived_temp,
+            "temperature": temperature,
+            "dew_point": dew_point,
         }
 
-        if perceived_temp is None:
+        if temperature is None or dew_point is None:
             logger.warning(f"Weather data not available for {city}")
     return city_stats
-
-
-def print_price_histogram(city, price_histogram, min_value, max_value, median_price):
-    if not config["print_histograms"]:
-        return
-    num_price_points = len(price_histogram)
-    price_step = (max_value - min_value) / (num_price_points - 1)
-    price_points = [min_value + i * price_step for i in range(num_price_points)]
-    median_index = int((median_price - min_value) / price_step)
-
-    # Expand the range to cover twice as many price points
-    start_index = max(0, median_index - 20)
-    end_index = min(num_price_points, median_index + 21)
-
-    # Combine every two price points to keep the number of rows similar
-    condensed_histogram = [
-        sum(price_histogram[i : i + 2]) for i in range(start_index, end_index, 2)
-    ]
-    condensed_price_points = [price_points[i] for i in range(start_index, end_index, 2)]
-
-    max_count = max(condensed_histogram)
-    histogram_width = 50
-    print(f"\nPrice Distribution for {city} (Median Price: ${median_price:.2f}):")
-    for i, price in enumerate(condensed_price_points):
-        lower_price = price
-        upper_price = lower_price + 2 * price_step
-        count = condensed_histogram[i]
-        bar_length = int(count / max_count * histogram_width)
-        print(f"${lower_price:8.2f} - ${upper_price:8.2f} | {'*' * bar_length}")
 
 
 def getCities():
     cities = json.loads(open(utils.getAbsPath("./../cities.json")).read())
     filtered_cities = {}
     for city, data in cities.items():
-        correctRegion = data["region"] != config["region"]
-        correctWater = (not config["only_onwater"]) or data["onwater"]
+        correctRegion = data["region"] == config["region"] or config["region"] == ""
+        correctBeaches = (not config["only_hasbeaches"]) or data["hasbeaches"]
         correctSchengen = (not config["only_nonschengen"]) or (not data["inschengen"])
-        if correctRegion and correctWater and correctSchengen:
+        if correctRegion and correctBeaches and correctSchengen:
             filtered_cities[city] = data
     cities = dict(filtered_cities)
     return cities
+
+
+def print_city_price_stats(city_price_stats, config):
+    max_price_per_night = config["max_price_per_night"]
+    nth_cheapest = config["nth_cheapest"]
+    bottom_nth_percentile = config["bottom_nth_percentile"]
+
+    # Prepare the table data
+    table_data = []
+    headers = [
+        "City",
+        f"#Units < ${max_price_per_night}/night",
+        "Median Price",
+    ]
+
+    if nth_cheapest is not None:
+        headers.insert(3, f"{nth_cheapest}th cheapest")
+    if bottom_nth_percentile is not None:
+        headers.insert(-2, f"Bottom {bottom_nth_percentile}th Percentile")
+    if config["show_temp"]:
+        headers.insert(2, "Temp (°C)")
+    if config["show_dew_point"]:
+        headers.insert(1, "Dew Point (°C)")
+
+    for city, stats in city_price_stats.items():
+        row = [
+            city,
+            stats["units"],
+            f"${stats['median_price']:.2f}",
+        ]
+
+        if nth_cheapest is not None:
+            row.insert(3, f"${stats['nth_cheapest_price']:.2f}")
+        if bottom_nth_percentile is not None:
+            row.insert(-2, f"${stats['bottom_nth_percentile_price']:.2f}")
+        if config["show_temp"]:
+            row.insert(2, f"{stats['temperature']:.2f}")
+        if config["show_dew_point"]:
+            row.insert(1, f"{stats['dew_point']:.2f}")
+
+        table_data.append(row)
+
+    # Sort the table data by median price
+    def get_median_price(row):
+        price = row[2]
+        if isinstance(price, str):
+            return float(price.replace("$", ""))
+        return float(price)
+
+    table_data.sort(key=get_median_price)
+
+    # Print the table
+    print("\n" + tabulate(table_data, headers=headers, tablefmt="grid"))
 
 
 if __name__ == "__main__":
@@ -374,60 +407,4 @@ if __name__ == "__main__":
         stay_duration,
     )
 
-    # Create a list of dictionaries for each city's stats
-    table_data = [
-        {
-            "City": city,
-            "Units": stats["units"],
-            "Median Price": stats["median_price"],
-            f"{nth_cheapest}th cheapest": stats["nth_cheapest_price"],
-            f"Bottom {bottom_nth_percentile}th Percentile": stats[
-                "bottom_nth_percentile_price"
-            ],
-        }
-        for city, stats in city_price_stats.items()
-    ]
-    # Sort the table data by median price in ascending order
-    table_data.sort(key=lambda x: x["Median Price"])
-
-    for row in table_data:
-        city = row["City"]
-        stats = city_price_stats[city]
-        print_price_histogram(
-            city,
-            stats["price_histogram"],
-            stats["min_value"],
-            stats["max_value"],
-            row["Median Price"],
-        )
-    # Print the table header
-    print(
-        "\n\n{:<25} {:<20} {:<15} {:<20} {:<25} {:<20}".format(
-            "City",
-            f"#Units < ${max_price_per_night}/night",
-            "Median Price",
-            f"{nth_cheapest}th cheapest",
-            f"Bottom {bottom_nth_percentile}th Percentile",
-            "Perceived Temp (°C)",
-        )
-    )
-    print("-" * 125)  # Increased the line length to accommodate the longer header
-
-    # Print the table rows
-    for row in table_data:
-        units = row.get("Units")
-        median_price = row.get("Median Price")
-        nth_cheapest_price = row.get(f"{nth_cheapest}th cheapest")
-        bottom_percentile = row.get(f"Bottom {bottom_nth_percentile}th Percentile")
-        perceived_temp = city_price_stats[row["City"]].get("perceived_temp")
-        # Format and print the row
-        print(
-            "{:<25} {:<20} ${:<14.2f} ${:<19.2f} ${:<24.2f} {:<20}".format(
-                row["City"],
-                units,
-                median_price,
-                nth_cheapest_price,
-                bottom_percentile,
-                f"{perceived_temp:.2f}" if perceived_temp is not None else "N/A",
-            )
-        )
+    print_city_price_stats(city_price_stats, config)

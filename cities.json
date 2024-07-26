@@ -37,12 +37,12 @@
     "Sofia, Bulgaria": {
         "region": "easteuro",
         "hasbeaches": false,
-        "inschengen": false
+        "inschengen": true
     },
     "Plovdiv, Bulgaria": {
         "region": "easteuro",
         "hasbeaches": false,
-        "inschengen": false
+        "inschengen": true
     },
     "Tirana, Albania": {
         "region": "easteuro",
@@ -101,7 +101,7 @@
     },
     "Vlore, Albania": {
         "region": "easteuro",
-        "hasbeaches": false,
+        "hasbeaches": true,
         "inschengen": false
     },
     "Constanta, Romania": {
@@ -127,7 +127,7 @@
     "Varna, Bulgaria": {
         "region": "easteuro",
         "hasbeaches": true,
-        "inschengen": false
+        "inschengen": true
     },
     "Patras, Greece": {
         "region": "easteuro",
@@ -267,6 +267,11 @@
     "Istanbul, Turkey": {
         "region": "easteuro",
         "hasbeaches": false,
+        "inschengen": false
+    },
+    "Himare, Albania": {
+        "region": "easteuro",
+        "hasbeaches": true,
         "inschengen": false
     }
 }

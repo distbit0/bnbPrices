@@ -1,14 +1,15 @@
 {
     "bedrooms": 2,
     "adults": 2,
-    "max_price_per_night": 200,
-    "nth_cheapest": 70,
-    "days_from_now": 20,
-    "stay_duration": 7,
+    "max_price_per_night": 160,
+    "nth_cheapest": 50,
+    "bottom_nth_percentile": null,
+    "days_from_now": 15,
+    "stay_duration": 14,
     "onlyNonZeroUnits": true,
-    "bottom_nth_percentile": 20,
-    "print_histograms": false,
     "only_hasbeaches": true,
-    "only_nonschengen": true,
-    "region": "SEA"
+    "only_nonschengen": false,
+    "region": "",
+    "show_temp": false,
+    "show_dew_point": true
 }
