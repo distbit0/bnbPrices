@@ -96,7 +96,7 @@ def get_weather_data(city, start_date, end_date):
     return round(float(avg_max_temperature), 1), round(float(avg_dew_point), 1)
 
 
-def get_price_data(city, bedrooms, start_date, end_date, adults, max_price):
+def get_price_data(city, bedrooms, start_date, end_date, adults, max_price, currency):
     apiKey = os.getenv("AIRBNB_API_KEY")
     headers = {
         "x-airbnb-api-key": apiKey,
@@ -255,6 +255,7 @@ class CitySearchParams:
     adults: int
     max_price_per_night: float
     stay_duration: int
+    currency: str
 
 
 def get_weather_data_with_retry(city, params, max_retries=3, delay=1):
@@ -285,6 +286,7 @@ def process_city(city, params, weather_data):
         params.end_date,
         params.adults,
         params.max_price_per_night * params.stay_duration,
+        params.currency,
     )
 
     if unitCount == 0 and config["onlyNonZeroUnits"]:
@@ -351,11 +353,12 @@ def getCities():
 
 def print_city_price_stats(city_info, config):
     max_price_per_night = config["max_price_per_night"]
+    currency = config["currency"]
     # Prepare the table data
     table_data = []
     headers = [
         "City",
-        f"#Units < ${max_price_per_night}/night",
+        f"#Units < {currency}${max_price_per_night}/night",
     ]
 
     if config["show_temp"]:
@@ -400,6 +403,7 @@ if __name__ == "__main__":
     cities = getCities()
     bedrooms = config["bedrooms"]
     adults = config["adults"]
+    currency = config["currency"]
     max_price_per_night = config["max_price_per_night"]
     days_from_now = config["days_from_now"]
     stay_duration = config["stay_duration"]
@@ -415,6 +419,7 @@ if __name__ == "__main__":
         adults=adults,
         max_price_per_night=max_price_per_night,
         stay_duration=stay_duration,
+        currency=currency,
     )
 
     city_info = get_city_info(cities, params)

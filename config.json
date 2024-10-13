@@ -1,18 +1,18 @@
 {
     "bedrooms": 2,
     "adults": 2,
-    "max_price_per_night": 120,
-    "days_from_now": 115,
+    "max_price_per_night": 50,
+    "currency": "AUD",
+    "days_from_now": 10,
     "stay_duration": 7,
     "onlyNonZeroUnits": true,
     "only_hasbeaches": false,
     "only_nonschengen": false,
-    "max_dew_point": 21.5,
+    "max_dew_point": 30,
     "max_temperature": null,
     "min_temperature": 8,
     "regions": [
-        "westeuro",
-        "easteuro"
+        "SEA"
     ],
     "country": "",
     "show_temp": true,

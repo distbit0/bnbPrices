@@ -204,11 +204,6 @@
         "hasbeaches": true,
         "inschengen": false
     },
-    "Baguio, Philippines": {
-        "region": "SEA",
-        "hasbeaches": false,
-        "inschengen": false
-    },
     "Rhodes, Greece": {
         "region": "easteuro",
         "hasbeaches": true,
@@ -283,5 +278,20 @@
         "region": "easteuro",
         "hasbeaches": true,
         "inschengen": true
+    },
+    "George Town, Penang, Malaysia": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Ubud, Bali, Indonesia": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Nusa Dua, Bali, Indonesia": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
     }
 }
