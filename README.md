@@ -1,0 +1,1 @@
+TODO: fix unit count calculation logic to keep area constant. v difficult given airbnb api interface
