@@ -4,6 +4,21 @@
         "hasbeaches": false,
         "inschengen": false
     },
+    "Rawai, Thailand": {
+        "region": "SEA",
+        "hasbeaches": false,
+        "inschengen": false
+    },
+    "Pattaya, Thailand": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": false
+    },
+    "Ko Pha Ngan, Thailand": {
+        "region": "SEA",
+        "hasbeaches": true,
+        "inschengen": null
+    },
     "Chiang Mai, Thailand": {
         "region": "SEA",
         "hasbeaches": false,
